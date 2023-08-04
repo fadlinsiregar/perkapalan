@@ -51,19 +51,19 @@ function calculateLikelihoodLevel($criteriaId, $monthDifferences)
 
     switch (true) {
         case $result >= 0 && $result < 1:
-            $likelihoodLevel = '<div style="color: #90EE90">Rare</div>';
+            $likelihoodLevel = 'Rare';
             break;
         case $result >= 1 && $result < 5:
-            $likelihoodLevel = '<div style="color: #198754">Unlikely</div>';
+            $likelihoodLevel = 'Unlikely';
             break;
         case $result >= 5 && $result < 25:
-            $likelihoodLevel = '<div style="color: #EED202">Possible</div>';
+            $likelihoodLevel = 'Possible';
             break;
         case $result >= 25 && $result < 60:
-            $likelihoodLevel = '<div style="color: #FFBF00">Likely</div>';
+            $likelihoodLevel = 'Likely';
             break;
         case $result >= 60:
-            $likelihoodLevel = '<div style="color: #991724">Almost Certain</div>';
+            $likelihoodLevel = 'Almost Certain';
             break;
         default:
             $likelihoodLevel = "Tidak Diketahui";
@@ -77,19 +77,19 @@ function calculateConsequenceLevel($completionDelay)
     $consequencesLevel = "";
     switch (true) {
         case $completionDelay < 10:
-            $consequencesLevel = '<div style="color: #90EE90">Insignificant</div>';
+            $consequencesLevel = 'Insignificant';
             break;
         case $completionDelay >= 10 && $completionDelay < 20:
-            $consequencesLevel = '<div style="color: #198754">Minor</div>';
+            $consequencesLevel = 'Minor';
             break;
         case $completionDelay >= 20 && $completionDelay < 50:
-            $consequencesLevel = '<div style="color: #EED202">Significant</div>';
+            $consequencesLevel = 'Significant';
             break;
         case $completionDelay >= 50 && $completionDelay < 100:
-            $consequencesLevel = '<div style="color: #FFBF00">Major</div>';
+            $consequencesLevel = 'Major';
             break;
         case $completionDelay >= 100:
-            $consequencesLevel = '<div style="color: #991724">Catastrophic</div>';
+            $consequencesLevel = 'Catastrophic';
             break;
         default:
             $consequencesLevel = 'Unknown';
@@ -97,4 +97,31 @@ function calculateConsequenceLevel($completionDelay)
     }
 
     return $consequencesLevel;
+}
+
+function checkRiskMatrix($likelihoodLevel, $consequencesLevel)
+{
+    $riskMatrix = [
+        'Rare' => ['Insignificant' => 'bg-success', 'Minor' => 'bg-success', 'Significant' => 'bg-warning', 'Major' => 'bg-warning', 'Catastrophic' => 'bg-danger'],
+        'Unlikely' => ['Insignificant' => 'bg-success', 'Minor' => 'bg-warning', 'Significant' => 'bg-warning', 'Major' => 'bg-danger', 'Catastrophic' => 'bg-danger'],
+        'Possible' => ['Insignificant' => 'bg-warning', 'Minor' => 'bg-warning', 'Significant' => 'bg-danger', 'Major' => 'bg-danger', 'Catastrophic' => 'bg-danger'],
+        'Likely' => ['Insignificant' => 'bg-warning', 'Minor' => 'bg-danger', 'Significant' => 'bg-danger', 'Major' => 'bg-danger', 'Catastrophic' => 'bg-danger'],
+        'Almost Certain' => ['Insignificant' => 'bg-danger', 'Minor' => 'bg-danger', 'Significant' => 'bg-danger', 'Major' => 'bg-danger', 'Catastrophic' => 'bg-danger'],
+    ];
+
+    return isset($riskMatrix[$likelihoodLevel][$consequencesLevel]) ? $riskMatrix[$likelihoodLevel][$consequencesLevel] : 'bg-secondary';
+}
+
+function checkRiskMatrixLabel($likelihoodLevel, $consequencesLevel)
+{
+    $riskMatrix = [
+        'Rare' => ['Insignificant' => 'Low', 'Minor' => 'Low', 'Significant' => 'Medium', 'Major' => 'Medium', 'Catastrophic' => 'High', ],
+        'Unlikely' => ['Insignificant' => 'Low', 'Minor' => 'Medium', 'Significant' => 'Medium', 'Major' => 'High', 'Catastrophic' => 'High', ],
+        'Possible' => ['Insignificant' => 'Low', 'Minor' => 'Medium', 'Significant' => 'High', 'Major' => 'High', 'Catastrophic' => 'Extreme', ],
+        'Likely' => ['Insignificant' => 'Medium', 'Minor' => 'Medium', 'Significant' => 'High', 'Major' => 'Extreme', 'Catastrophic' => 'Extreme', ],
+        'Almost Certain' => ['Insignificant' => 'Medium', 'Minor' => 'High', 'Significant' => 'High', 'Major' => 'Extreme', 'Catastrophic' => 'Extreme', ]
+    ];
+    
+
+    return isset($riskMatrix[$likelihoodLevel][$consequencesLevel]) ? $riskMatrix[$likelihoodLevel][$consequencesLevel] : 'Unknown';
 }

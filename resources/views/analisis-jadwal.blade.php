@@ -7,7 +7,8 @@
         <p>Jam Pengerjaan: {{ $workingHours }}</p>
         <p>Selisih Bulan Pengerjaan: {{ $monthDifferences }}</p>
         <section class="mt-5">
-            <h4><i class="bi bi-exclamation-circle"></i> Analisis Resiko Keterlambatan Berdasarkan Jam Pengerjaan per Hari</h4>
+            <h4><i class="bi bi-exclamation-circle"></i> Analisis Resiko Keterlambatan Berdasarkan Jam Pengerjaan per Hari
+            </h4>
             <table class="table table-bordered">
                 <thead>
                     <th>Kriteria</th>
@@ -29,7 +30,8 @@
             </table>
         </section>
         <section class="mt-5">
-            <h4><i class="bi bi-exclamation-circle"></i> Analisis Resiko Keterlambatan Berdasarkan Waktu Keseluruhan Pembangunan</h4>
+            <h4><i class="bi bi-exclamation-circle"></i> Analisis Resiko Keterlambatan Berdasarkan Waktu Keseluruhan
+                Pembangunan</h4>
             <table class="table table-bordered">
                 <thead>
                     <th>Kriteria</th>
@@ -59,21 +61,28 @@
                     <th>Likelihood</th>
                     <th>Likelihood Level</th>
                     <th>Level Consequence per Kejadian</th>
+                    <th>Risk Level</th>
                 </thead>
                 <tbody>
                     @foreach ($finishedCriteriaSchedules as $finishedCriteriaSchedule)
+                        @php
+                            $likelihoodLevel = calculateLikelihoodLevel($finishedCriteriaSchedule->criteria_id, $monthDifferences);
+                            $consequencesLevel = calculateConsequenceLevel($finishedCriteriaSchedule->completion_delay);
+                        @endphp
                         <tr>
                             <td>{{ $finishedCriteriaSchedule->criteria }}</td>
                             <td>{{ $finishedCriteriaSchedule->completion_delay }}</td>
                             <td>{{ getNewLikelihood($finishedCriteriaSchedule->criteria_id, $monthDifferences) }}</td>
-                            <td><strong>{!! calculateLikelihoodLevel($finishedCriteriaSchedule->criteria_id, $monthDifferences) !!}</strong></td>
-                            <td><strong>{!! calculateConsequenceLevel($finishedCriteriaSchedule->completion_delay) !!}</strong></td>
+                            <td><strong>{{ $likelihoodLevel }}</strong></td>
+                            <td><strong>{{ $consequencesLevel }}</strong></td>
+                            <td class="{{ checkRiskMatrix($likelihoodLevel, $consequencesLevel) }}">{{ checkRiskMatrixLabel($likelihoodLevel, $consequencesLevel) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </section>
         <section>
+
             <div class="row">
                 <div class="col-lg-6">
                     <h5 class="text-center">Kriteria Likelihood</h5>
