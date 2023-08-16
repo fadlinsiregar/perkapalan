@@ -17,6 +17,7 @@ class CreateFinishedCriteriaSchedulesTable extends Migration
             $table->id();
             $table->unsignedBigInteger("schedule_id");
             $table->unsignedBigInteger("criteria_id");
+            $table->date('start_date');
             $table->date("estimated_completion_date");
             $table->date("completed_date");
             $table->integer("completion_delay");

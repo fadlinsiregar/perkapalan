@@ -23,9 +23,10 @@ class ScheduleController extends Controller
 
         $shipTypes = ShipType::all();
 
-        return view('jadwal')
-            ->with('schedules', $schedules)
-            ->with('shipTypes', $shipTypes);
+        return view('jadwal')->with([
+            'schedules' => $schedules,
+            'shipTypes' => $shipTypes,
+        ]);
     }
 
     public function storeShipConstructionSchedule(Request $request)
@@ -39,34 +40,27 @@ class ScheduleController extends Controller
         ]);
 
         $newSchedule = Schedule::create($newScheduleData);
+        $message = $newSchedule->exists ? 'Jadwal berhasil dibuat!' : 'Jadwal gagal dibuat!';
 
-        if ($newSchedule->exists) {
-            return redirect()->back()->with('success', 'Jadwal berhasil dibuat!');
-        } else {
-            return redirect()->back()->with('failed', 'Jadwal gagal dibuat!');
-        }
+        return redirect()->back()->with($newSchedule->exists ? 'success' : 'failed', $message);
     }
 
     public function showScheduleDataById(int $id)
     {
-        $currentDate = (string) Carbon::now()->format('Y-m-d');
-        $schedule = Schedule::find($id);
+        $currentDate = now()->format('Y-m-d');
 
+        $schedule = Schedule::find($id);
         $criterias = FerryCriteria::all();
 
         $existingScheduleCriterias = DB::table('criteria_schedules')
             ->select('criteria_id')
-            ->where('schedule_id', '=', $id);
+            ->where('schedule_id', $id);
 
-        $criteriaSchedulesAfter = DB::table('ferry_criterias')
-            ->select()
-            ->whereIn('id', $existingScheduleCriterias)
+        $criteriaSchedulesAfter = FerryCriteria::whereIn('id', $existingScheduleCriterias)
             ->orderBy('id', 'desc')
             ->get();
 
-        $criteriaSchedulesBefore = DB::table('ferry_criterias')
-            ->select()
-            ->whereNotIn('id', $existingScheduleCriterias)
+        $criteriaSchedulesBefore = FerryCriteria::whereNotIn('id', $existingScheduleCriterias)
             ->get();
 
         $criteriaSchedules = CriteriaSchedule::where('schedule_id', $id)
@@ -93,15 +87,16 @@ class ScheduleController extends Controller
             ->where('schedule_id', $id)
             ->get();
 
-        return view('progress-jadwal')
-            ->with('schedule', $schedule)
-            ->with('criterias', $criterias)
-            ->with('criteriaSchedulesBefore', $criteriaSchedulesBefore)
-            ->with('criteriaSchedulesAfter', $criteriaSchedulesAfter)
-            ->with('criteriaSchedules', $criteriaSchedules)
-            ->with('nearestCriteriaSchedule', $nearestCriteriaSchedule)
-            ->with('ongoingCriteriaSchedule', $ongoingCriteriaSchedule)
-            ->with('finishedCriteriaSchedules', $finishedCriteriaSchedules);
+        return view('progress-jadwal')->with([
+            'schedule' => $schedule,
+            'criterias' => $criterias,
+            'criteriaSchedulesBefore' => $criteriaSchedulesBefore,
+            'criteriaSchedulesAfter' => $criteriaSchedulesAfter,
+            'criteriaSchedules' => $criteriaSchedules,
+            'nearestCriteriaSchedule' => $nearestCriteriaSchedule,
+            'ongoingCriteriaSchedule' => $ongoingCriteriaSchedule,
+            'finishedCriteriaSchedules' => $finishedCriteriaSchedules,
+        ]);
     }
 
     public function storeCriteriaSchedule($id, Request $request)
@@ -112,14 +107,12 @@ class ScheduleController extends Controller
         ]);
 
         $schedule = Schedule::find($id);
-
         $days = $request->input('days');
 
         $startDate = $schedule->start_date;
 
         $criteriaSchedulesCount = CriteriaSchedule::where('schedule_id', $id)->count();
 
-        // dd($criteriaSchedulesCount);
         if ($criteriaSchedulesCount > 0) {
             $criteriaAfter = (int) $request->input('criteria_after');
             $date = CriteriaSchedule::where([
@@ -131,37 +124,38 @@ class ScheduleController extends Controller
 
         $completionDate = Carbon::parse($startDate)->addWeekdays($days)->format('Y-m-d');
 
-        $criteriaSchedule = new CriteriaSchedule;
-        $criteriaSchedule->schedule_id = $id;
-        $criteriaSchedule->criteria_id = $request->input('criteria');
-        $criteriaSchedule->start_date = $startDate;
-        $criteriaSchedule->completion_date = $completionDate;
+        $criteriaSchedule = new CriteriaSchedule([
+            'schedule_id' => $id,
+            'criteria_id' => $request->input('criteria'),
+            'start_date' => $startDate,
+            'completion_date' => $completionDate,
+        ]);
+
         $criteriaSchedule->save();
 
         return redirect()->back()->with('success', 'Rincian jadwal berhasil ditambah!');
     }
+
 
     public function storeFinishedCriteriaSchedule($id, $criteria)
     {
         $ongoingCriteriaSchedule = DB::table('ongoing_criteria_schedules')
             ->where('schedule_id', $id)
             ->where('criteria_id', $criteria)
-            ->first(['completion_date']);
+            ->first(['start_date', 'completion_date']);
 
+        $startDate = Carbon::parse($ongoingCriteriaSchedule->start_date);
         $estimatedCompletionDate = Carbon::parse($ongoingCriteriaSchedule->completion_date);
         $completedDate = Carbon::now();
-        $completionDelay = $estimatedCompletionDate->diffInDays($completedDate, false);
-
-        if ($completionDelay < 0) {
-            $completionDelay = 0;
-        }
+        $completionDelay = max($estimatedCompletionDate->diffInDays($completedDate, false), 0);
 
         DB::table('finished_criteria_schedules')->insert([
             'schedule_id' => $id,
             'criteria_id' => $criteria,
+            'start_date' => $startDate,
             'estimated_completion_date' => $estimatedCompletionDate->format('Y-m-d'),
             'completed_date' => $completedDate->format('Y-m-d'),
-            'completion_delay' => $completionDelay
+            'completion_delay' => $completionDelay,
         ]);
 
         DB::table('ongoing_criteria_schedules')
@@ -172,7 +166,7 @@ class ScheduleController extends Controller
         DB::table('criteria_schedules')
             ->where('schedule_id', $id)
             ->where('criteria_id', $criteria)
-            ->update(['is_finished' => '1']);
+            ->update(['is_finished' => true]);
 
         return redirect()->back()->with('success', 'Kriteria jadwal telah selesai!');
     }
@@ -192,11 +186,17 @@ class ScheduleController extends Controller
             ->orderBy('finished_criteria_schedules.criteria_id')
             ->get();
 
-        // dd($finishedCriteriaSchedules);
+        return view('analisis-jadwal')->with([
+            'finishedCriteriaSchedules' => $finishedCriteriaSchedules,
+            'workingHours' => $workingHours,
+            'monthDifferences' => $monthDifferences,
+        ]);
+    }
 
-        return view('analisis-jadwal')
-            ->with('finishedCriteriaSchedules', $finishedCriteriaSchedules)
-            ->with('workingHours', $workingHours)
-            ->with('monthDifferences', $monthDifferences);
+    public function deleteSchedule($id)
+    {
+        $schedule = Schedule::find($id);
+
+        $schedule->delete();
     }
 }
