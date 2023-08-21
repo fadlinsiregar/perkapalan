@@ -3,12 +3,13 @@
 
 @section('main')
     <div class="container mt-3">
-        <h2>Hasil Analisis</h2>
-        <p>Jam Pengerjaan: {{ $workingHours }}</p>
-        <p>Selisih Bulan Pengerjaan: {{ $monthDifferences }}</p>
+        <h2>Analisis Resiko</h2>
+        <p>Nama Pembangunan Kapal: {{ $scheduleName }}</p>
+        <p>Jam Pengerjaan: {{ $workingHours }} jam</p>
+        <p>Selisih Bulan Pengerjaan: {{ $monthDifferences }} bulan</p>
+
         <section class="mt-5">
-            <h4><i class="bi bi-exclamation-circle"></i> Analisis Resiko Keterlambatan Berdasarkan Jam Pengerjaan per Hari
-            </h4>
+            <h4><i class="bi bi-exclamation-circle"></i> Keterlambatan Berdasarkan Jam Pengerjaan</h4>
             <table class="table table-bordered">
                 <thead>
                     <th>Kriteria</th>
@@ -20,18 +21,17 @@
                     @foreach ($finishedCriteriaSchedules as $finishedCriteriaSchedule)
                         <tr>
                             <td>{{ $finishedCriteriaSchedule->criteria }}</td>
-                            <td>{{ $finishedCriteriaSchedule->completion_delay }}</td>
+                            <td>{{ number_format($finishedCriteriaSchedule->completion_delay, 2) }}</td>
                             <td>{{ getLikelihood($finishedCriteriaSchedule->criteria_id) }}</td>
-                            <td>{{ calculateConsequencePerEventWorkingHours($finishedCriteriaSchedule->criteria_id, $workingHours, $finishedCriteriaSchedule->completion_delay) }}
-                            </td>
+                            <td>{{ calculateConsequenceWorkingHours($finishedCriteriaSchedule->criteria_id, $workingHours, $finishedCriteriaSchedule->completion_delay) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </section>
+
         <section class="mt-5">
-            <h4><i class="bi bi-exclamation-circle"></i> Analisis Resiko Keterlambatan Berdasarkan Waktu Keseluruhan
-                Pembangunan</h4>
+            <h4><i class="bi bi-exclamation-circle"></i> Berdasarkan Lama Pembangunan</h4>
             <table class="table table-bordered">
                 <thead>
                     <th>Kriteria</th>
@@ -43,17 +43,18 @@
                     @foreach ($finishedCriteriaSchedules as $finishedCriteriaSchedule)
                         <tr>
                             <td>{{ $finishedCriteriaSchedule->criteria }}</td>
-                            <td>{{ $finishedCriteriaSchedule->completion_delay }}</td>
+                            <td>{{ number_format($finishedCriteriaSchedule->completion_delay, 2) }}</td>
                             <td>{{ getNewLikelihood($finishedCriteriaSchedule->criteria_id, $monthDifferences) }}</td>
-                            <td>{{ calculateConsequencePerEventMonthDifferences($finishedCriteriaSchedule->criteria_id, $workingHours, $finishedCriteriaSchedule->completion_delay) }}
+                            <td>{{ calculateConsequenceMonthDifferences($finishedCriteriaSchedule->criteria_id, $workingHours, $finishedCriteriaSchedule->completion_delay) }}
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </section>
+
         <section class="mt-5">
-            <h4><i class="bi bi-exclamation-circle"></i> Analisis Tingkat Likelihood dan Consequences</h4>
+            <h4><i class="bi bi-exclamation-circle"></i> Tingkat Likelihood dan Consequences</h4>
             <table class="table table-bordered">
                 <thead>
                     <th>Kriteria</th>
@@ -61,31 +62,29 @@
                     <th>Likelihood</th>
                     <th>Likelihood Level</th>
                     <th>Level Consequence per Kejadian</th>
-                    <th>Risk Level</th>
                 </thead>
                 <tbody>
                     @foreach ($finishedCriteriaSchedules as $finishedCriteriaSchedule)
                         @php
                             $likelihoodLevel = calculateLikelihoodLevel($finishedCriteriaSchedule->criteria_id, $monthDifferences);
                             $consequencesLevel = calculateConsequenceLevel($finishedCriteriaSchedule->completion_delay);
+                            $newLikelihood = getNewLikelihood($finishedCriteriaSchedule->criteria_id, $monthDifferences);
                         @endphp
                         <tr>
                             <td>{{ $finishedCriteriaSchedule->criteria }}</td>
-                            <td>{{ $finishedCriteriaSchedule->completion_delay }}</td>
-                            <td>{{ getNewLikelihood($finishedCriteriaSchedule->criteria_id, $monthDifferences) }}</td>
-                            <td><strong>{{ $likelihoodLevel }}</strong></td>
-                            <td><strong>{{ $consequencesLevel }}</strong></td>
-                            <td class="{{ checkRiskMatrix($likelihoodLevel, $consequencesLevel) }}">{{ checkRiskMatrixLabel($likelihoodLevel, $consequencesLevel) }}</td>
+                            <td>{{ number_format($finishedCriteriaSchedule->completion_delay, 2) }}</td>
+                            <td>{{ $newLikelihood }}</td>
+                            <td style="color: {{ $likelihoodLevel['colorCode'] }}"><strong>{{ $likelihoodLevel['likelihoodLevel'] }}</strong></td>
+                            <td style="color: {{ $consequencesLevel['colorCode'] }}"><strong>{{ $consequencesLevel['consequencesLevel'] }}</strong></td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </section>
         <section>
-
             <div class="row">
                 <div class="col-lg-6">
-                    <h5 class="text-center">Kriteria Likelihood</h5>
+                    <h5 class="text-center">Tabel Kriteria Likelihood</h5>
                     <table class="table table-bordered" id="table-likelihood-definition">
                         <thead>
                             <th class="w-50">Likelihood</th>
@@ -116,7 +115,7 @@
                     </table>
                 </div>
                 <div class="col-lg-6">
-                    <h5 class="text-center">Kriteria Consequences</h5>
+                    <h5 class="text-center">Tabel Kriteria Consequences</h5>
                     <table class="table table-bordered" id="table-likelihood-definition">
                         <thead>
                             <th class="w-50">Consequences</th>
@@ -133,7 +132,7 @@
                             </tr>
                             <tr>
                                 <td>Moderate</td>
-                                <td>Waktu terbuang 20 s/d 50</td>
+                                <td>Waktu terbuang 20 s/d 50 hari</td>
                             </tr>
                             <tr>
                                 <td>Major</td>

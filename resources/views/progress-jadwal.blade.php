@@ -11,7 +11,7 @@
                 @if (session('success'))
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
-                <h3 class="mt-3"><i class="bi bi-info-circle"></i>&nbsp;Informasi Pembangunan</h3>
+                <h3 class="mt-3"><i class="bi bi-info-circle"></i> Informasi</h3>
 
                 <table class="table table-borderless" id="table-info">
                     <tbody>
@@ -31,22 +31,22 @@
                     </tbody>
                 </table>
 
-                <h3><i class="bi bi-calendar-date"></i>&nbsp;Informasi Jadwal per Kriteria</h3>
+                <h3><i class="bi bi-calendar-date"></i> Jadwal Pekerjaan</h3>
 
                 <table class="table table-borderless" id="table-info">
                     <tbody>
                         <tr>
-                            <td class="w-50">Jadwal Mendatang</td>
+                            <td class="w-50">Pekerjaan Mendatang</td>
                             <td class="w-50">
                                 @if ($nearestCriteriaSchedule != null)
                                     {{ $nearestCriteriaSchedule->criteria }} ({!! formatDate($nearestCriteriaSchedule->start_date) !!})
                                 @else
-                                    Belum ada jadwal mendatang
+                                    Belum ada
                                 @endif
                             </td>
                         </tr>
                         <tr>
-                            <td>Jadwal Saat Ini</strong></td>
+                            <td>Pekerjaan Saat Ini</strong></td>
                             <td>
                                 @if ($ongoingCriteriaSchedule != null)
                                     {{ $ongoingCriteriaSchedule->criteria }} (Berakhir pada {!! formatDate($ongoingCriteriaSchedule->completion_date) !!})
@@ -57,7 +57,7 @@
                                         <button type="submit" class="btn btn-sm btn-success">Selesai</button>
                                     </form>
                                 @else
-                                    Belum ada jadwal saat ini
+                                    Belum ada
                                 @endif
                             </td>
                         </tr>
@@ -66,7 +66,7 @@
 
                 <button type="button" class="btn btn-primary mb-3 w-25 m-auto" data-bs-toggle="modal"
                     data-bs-target="#addCriteriaScheduleModal">
-                    <i class="bi bi-calendar-plus"></i> Tambah Jadwal Kriteria
+                    <i class="bi bi-calendar-plus"></i> Tambah Jadwal Pekerjaan
                 </button>
 
                 <div class="modal fade" id="addCriteriaScheduleModal" tabindex="-1"
@@ -126,28 +126,32 @@
         </div>
 
         <section>
-            <h3 class="container"><i class="bi bi-graph-up"></i>&nbsp;Grafik Pelaksanaan Jadwal</h3>
-
+            <h3 class="container"><i class="bi bi-graph-up"></i> Gantt Chart Progress</h3>
             <div>
                 <canvas id="ganttChart"></canvas>
             </div>
         </section>
 
-        <div class="container">
+        <div class="container mt-5">
             <section class="row">
-                <h3><i class="bi bi-check2"></i>&nbsp;Daftar Jadwal per Kriteria yang Selesai</h3>
+                <h3><i class="bi bi-check2"></i> Daftar Pekerjaan Selesai</h3>
                 <table class="table table-bordered">
                     <thead>
-                        <th>No.</th>
-                        <th>Kriteria</th>
-                        <th>Estimasi Tanggal Selesai</th>
-                        <th>Diselesaikan Pada</th>
-                        <th>Keterlambatan</th>
+                        <tr>
+                            <th>No.</th>
+                            <th>Kriteria</th>
+                            <th>Estimasi Tanggal Selesai</th>
+                            <th>Diselesaikan Pada</th>
+                            <th>Keterlambatan</th>
+                        </tr>
                     </thead>
                     <tbody>
+                        @php
+                            $counter = 1;
+                        @endphp
                         @foreach ($finishedCriteriaSchedules as $finishedCriteriaSchedule)
                             <tr>
-                                <td>1</td>
+                                <td>{{ $counter++ }}</td>
                                 <td>{{ $finishedCriteriaSchedule->criteria }}</td>
                                 <td>{{ formatDate($finishedCriteriaSchedule->estimated_completion_date) }}</td>
                                 <td>{{ formatDate($finishedCriteriaSchedule->completed_date) }}</td>
@@ -156,11 +160,9 @@
                         @endforeach
                     </tbody>
                 </table>
-                <a href="{{ route('schedules.schedule_analysis', ['id' => $schedule->id]) }}"
-                    class="btn btn-primary w-25 m-auto mt-3"><i class="bi bi-clipboard-data"></i> Analisis
-                    Resiko</a>
+                <a href="{{ route('schedules.schedule_analysis', ['id' => $schedule->id]) }}" class="btn btn-primary w-25 m-auto mt-3"><i class="bi bi-clipboard-data"></i> Lihat Analisis Resiko</a>
             </section>
-        </div>
+        </div>        
     </div>
 @endsection
 
@@ -173,9 +175,9 @@
                 '{!! $criteria->criteria !!}',
             @endforeach
         ];
-
         const data = {
-            datasets: [{
+            datasets: [
+                {
                     label: "Estimasi Pekerjaan",
                     data: [
                         @foreach ($criteriaSchedules as $criteriaSchedule)
@@ -196,8 +198,8 @@
                     ],
                     backgroundColor: "#36AE7C",
                     borderSkipped: false,
-                },
-            ],
+                }
+            ]
         }
 
         const options = {
@@ -246,7 +248,7 @@
                         labels: labels,
                         ticks: {
                             callback(value, index) {
-                                const maxLength = 30;
+                                const maxLength = 35;
                                 const strValue = this.getLabelForValue(value).toString();
                                 return strValue.length > maxLength ? `${strValue.substring(0, maxLength)}...` : strValue;
                             }

@@ -97,8 +97,8 @@
                             <a href="{{ route('schedules.schedule_progress', ['id' => $schedule->id]) }}"
                                 class="btn btn-primary"><i class="bi bi-info-circle"></i>&nbsp;Detail</a>
                             {{-- <a href="#" class="btn btn-warning"><i class="bi bi-pencil-square"></i>&nbsp;Ubah</a> --}}
-                            <a href="#" class="btn btn-danger" data-bs-toggle="modal"
-                                data-bs-target="#confirmDeleteModel"><i class="bi bi-trash"></i>&nbsp;Hapus</a>
+                            {{-- <a href="#" class="btn btn-danger" data-bs-toggle="modal"
+                                data-bs-target="#confirmDeleteModel"><i class="bi bi-trash"></i>&nbsp;Hapus</a> --}}
                         </td>
                     </tr>
                 @endforeach

@@ -27,7 +27,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->call(function() {
-            $currentDate = Carbon::now()->format('Y-m-d');
+            $currentDate = now()->format('Y-m-d');
 
             DB::insert("INSERT INTO ongoing_criteria_schedules (schedule_id, criteria_id, start_date, completion_date)
             SELECT schedule_id, criteria_id, start_date, completion_date FROM criteria_schedules

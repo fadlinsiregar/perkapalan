@@ -146,7 +146,7 @@ class ScheduleController extends Controller
 
         $startDate = Carbon::parse($ongoingCriteriaSchedule->start_date);
         $estimatedCompletionDate = Carbon::parse($ongoingCriteriaSchedule->completion_date);
-        $completedDate = Carbon::now();
+        $completedDate = now();
         $completionDelay = max($estimatedCompletionDate->diffInDays($completedDate, false), 0);
 
         DB::table('finished_criteria_schedules')->insert([
@@ -178,6 +178,7 @@ class ScheduleController extends Controller
         $startDate = Carbon::parse($schedule->start_date);
         $completionDate = Carbon::parse($schedule->completion_date);
         $monthDifferences = $startDate->diffInMonths($completionDate);
+        $scheduleName = $schedule->construction_name;
 
         $finishedCriteriaSchedules = DB::table('finished_criteria_schedules')
             ->join('ferry_criterias', 'finished_criteria_schedules.criteria_id', '=', 'ferry_criterias.id')
@@ -190,6 +191,7 @@ class ScheduleController extends Controller
             'finishedCriteriaSchedules' => $finishedCriteriaSchedules,
             'workingHours' => $workingHours,
             'monthDifferences' => $monthDifferences,
+            'scheduleName' => $scheduleName,
         ]);
     }
 
