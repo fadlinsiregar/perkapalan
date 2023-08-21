@@ -9,7 +9,7 @@
         <p>Selisih Bulan Pengerjaan: {{ $monthDifferences }} bulan</p>
 
         <section class="mt-5">
-            <h4><i class="bi bi-exclamation-circle"></i> Keterlambatan Berdasarkan Jam Pengerjaan</h4>
+            <h4><i class="bi bi-search"></i> Keterlambatan Berdasarkan Jam Pengerjaan</h4>
             <table class="table table-bordered">
                 <thead>
                     <th>Kriteria</th>
@@ -31,7 +31,7 @@
         </section>
 
         <section class="mt-5">
-            <h4><i class="bi bi-exclamation-circle"></i> Berdasarkan Lama Pembangunan</h4>
+            <h4><i class="bi bi-search"></i> Keterlambatan Berdasarkan Lama Pembangunan</h4>
             <table class="table table-bordered">
                 <thead>
                     <th>Kriteria</th>
@@ -54,7 +54,7 @@
         </section>
 
         <section class="mt-5">
-            <h4><i class="bi bi-exclamation-circle"></i> Tingkat Likelihood dan Consequences</h4>
+            <h4><i class="bi bi-search"></i> Tingkat Likelihood dan Consequences</h4>
             <table class="table table-bordered">
                 <thead>
                     <th>Kriteria</th>
