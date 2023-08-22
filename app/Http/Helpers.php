@@ -86,32 +86,32 @@ function calculateLikelihoodLevel($criteriaId, $monthDifferences)
 function calculateConsequenceLevel($completionDelay)
 {
     $consequencesLevel = "";
-    $colorCode = ""; // Initialize color code variable
+    $colorCode = "";
 
     switch (true) {
         case $completionDelay < 10:
             $consequencesLevel = 'Insignificant';
-            $colorCode = '#99ff99'; // Softer green
+            $colorCode = '#99ff99'; 
             break;
         case $completionDelay >= 10 && $completionDelay < 20:
             $consequencesLevel = 'Minor';
-            $colorCode = '#ffff99'; // Softer yellow
+            $colorCode = '#ffff99'; 
             break;
         case $completionDelay >= 20 && $completionDelay < 50:
             $consequencesLevel = 'Significant';
-            $colorCode = '#ffcc99'; // Softer orange
+            $colorCode = '#ffcc99'; 
             break;
         case $completionDelay >= 50 && $completionDelay < 100:
             $consequencesLevel = 'Major';
-            $colorCode = '#ff9999'; // Softer red
+            $colorCode = '#ff9999'; 
             break;
         case $completionDelay >= 100:
             $consequencesLevel = 'Catastrophic';
-            $colorCode = '#ff6666'; // Softer deep red
+            $colorCode = '#ff6666';
             break;
         default:
             $consequencesLevel = 'Unknown';
-            $colorCode = '#888'; // Default color
+            $colorCode = '#888';
             break;
     }
 
