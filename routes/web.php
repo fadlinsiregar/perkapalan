@@ -30,7 +30,10 @@ Route::name('schedules.')->prefix('schedules')->group(function () {
         ->name('store_criteria_schedule');
 
     Route::post('/{id}/{criteria}', [ScheduleController::class, 'storeFinishedCriteriaSchedule'])
-        ->name('store_finished_criteria_schedule');
+        ->name('store_finished_criteria_schedule')->where(['criteria' => '[0-9]+']);
+
+    Route::post('/{id}/prediction', [ScheduleController::class, 'storeWorkFinishPrediction'])
+        ->name('store_work_finish_prediction');
 
     Route::get('/{id}/analysis', [ScheduleController::class, 'showScheduleAnalysisById'])
         ->name('schedule_analysis');

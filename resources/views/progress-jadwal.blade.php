@@ -31,7 +31,7 @@
                     </tbody>
                 </table>
 
-                <h3><i class="bi bi-calendar-date"></i> Jadwal Pekerjaan</h3>
+                {{-- <h3><i class="bi bi-calendar-date"></i> Jadwal Pekerjaan</h3>
 
                 <table class="table table-borderless" id="table-info">
                     <tbody>
@@ -62,7 +62,7 @@
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                </table> --}}
 
                 <button type="button" class="btn btn-primary mb-3 w-25 m-auto" data-bs-toggle="modal"
                     data-bs-target="#addCriteriaScheduleModal">
@@ -74,8 +74,7 @@
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="addCriteriaScheduleModalLabel">Tambah Jadwal per Kriteria
-                                </h1>
+                                <h1 class="modal-title fs-5" id="addCriteriaScheduleModalLabel">Tambah Pekerjaan</h1>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
@@ -84,7 +83,7 @@
                                 @csrf
                                 <div class="modal-body">
                                     <div class="form-group mt-3">
-                                        <label for="criteria">Kriteria Pembangunan Kapal</label>
+                                        <label for="criteria">Pekerjaan</label>
                                         <select name="criteria" id="criteria" class="form-select">
                                             @foreach ($criteriaSchedulesBefore as $criteriaSchedule)
                                                 <option value="{{ $criteriaSchedule->id }}">
@@ -102,11 +101,11 @@
                                             value="{{ @old('days') }}" required>
                                     </div>
                                     <div class="form-group mt-3">
-                                        <label for="criteria_after">Kriteria Dilakukan Setelah</label>
+                                        <label for="criteria_after">Dilakukan Setelah</label>
                                         <select name="criteria_after" id="criteria_after" class="form-select" readonly
                                             @if ($criteriaSchedulesAfter->count() == 0) disabled @endif>
                                             <option value="" disabled>Pilih...</option>
-                                            @foreach ($criteriaSchedulesAfter as $criteriaSchedule)
+                                            @foreach ($criteriaSchedulesAfter->sortByDesc('id') as $criteriaSchedule)
                                                 <option value="{{ $criteriaSchedule->id }}">
                                                     {{ $criteriaSchedule->criteria }}
                                                 </option>
@@ -122,6 +121,58 @@
                         </div>
                     </div>
                 </div>
+
+                @if (count($criteriaSchedulesAfter) > 0)
+                    <button type="button" class="btn btn-primary mb-3 w-25 m-auto" data-bs-toggle="modal"
+                        data-bs-target="#addWorkDelayPredictionModal">
+                        <i class="bi bi-bar-chart-fill"></i> Tambah Prediksi Penyelesaian
+                    </button>
+                @endif
+
+                <div class="modal fade" id="addWorkDelayPredictionModal" tabindex="-1"
+                    aria-labelledby="addWorkDelayPredictionModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="addWorkDelayPredictionModalLabel">Tambah Prediksi
+                                    Penyelesaian
+                                </h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <form action="{{ route('schedules.store_work_finish_prediction', ['id' => $schedule->id]) }}"
+                                method="POST">
+                                @csrf
+                                <div class="modal-body">
+                                    <div class="form-group mt-3">
+                                        <label for="criteria">Pekerjaan</label>
+                                        <select name="criteria" id="criteria" class="form-select" readonly
+                                            @if ($criteriaSchedulesAfter->count() == 0) disabled @endif>
+                                            <option value="" disabled>Pilih...</option>
+                                            @foreach ($criteriaSchedulesAfter->sortBy('id') as $criteriaSchedule)
+                                                <option value="{{ $criteriaSchedule->id }}">
+                                                    {{ $criteriaSchedule->criteria }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group mt-3">
+                                        <label for="days">Hari Keterlambatan (dalam hari kerja)</label>
+                                        <input type="number" name="days" id="days" class="form-control"
+                                            class="@error('days') is-invalid @enderror" value="{{ @old('days') }}"
+                                            required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-primary">Tambah</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
             </section>
         </div>
 
@@ -160,9 +211,11 @@
                         @endforeach
                     </tbody>
                 </table>
-                <a href="{{ route('schedules.schedule_analysis', ['id' => $schedule->id]) }}" class="btn btn-primary w-25 m-auto mt-3"><i class="bi bi-clipboard-data"></i> Lihat Analisis Resiko</a>
+                <a href="{{ route('schedules.schedule_analysis', ['id' => $schedule->id]) }}"
+                    class="btn btn-primary w-25 m-auto mt-3"><i class="bi bi-clipboard-data"></i> Lihat Analisis
+                    Resiko</a>
             </section>
-        </div>        
+        </div>
     </div>
 @endsection
 
@@ -176,8 +229,7 @@
             @endforeach
         ];
         const data = {
-            datasets: [
-                {
+            datasets: [{
                     label: "Estimasi Pekerjaan",
                     data: [
                         @foreach ($criteriaSchedules as $criteriaSchedule)
@@ -203,59 +255,59 @@
         }
 
         const options = {
-                responsive: true,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let value = JSON.parse(context.formattedValue);
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let value = JSON.parse(context.formattedValue);
 
-                                const options = {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric"
-                                }
+                            const options = {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric"
+                            }
 
-                                const formatDate = date => new Date(date).toLocaleDateString("id-ID", options);
+                            const formatDate = date => new Date(date).toLocaleDateString("id-ID", options);
 
-                                const startDate = formatDate(value[0]);
-                                const completionDate = formatDate(value[1]);
+                            const startDate = formatDate(value[0]);
+                            const completionDate = formatDate(value[1]);
 
-                                const label = `${context.dataset.label}: ${startDate} - ${completionDate}` ||
+                            const label = `${context.dataset.label}: ${startDate} - ${completionDate}` ||
                                 '';
 
-                                return label;
-                            }
+                            return label;
                         }
                     }
-                },
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        position: 'top',
-                        type: 'time',
-                        time: {
-                            unit: 'month'
-                        },
-                        min: '{{ $schedule->start_date }}',
-                        max: '{{ $schedule->completion_date }}',
-                        grid: {
-                            borderDash: [5, 5]
-                        }
+                }
+            },
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    position: 'top',
+                    type: 'time',
+                    time: {
+                        unit: 'month'
                     },
-                    y: {
-                        beginAtZero: true,
-                        labels: labels,
-                        ticks: {
-                            callback(value, index) {
-                                const maxLength = 35;
-                                const strValue = this.getLabelForValue(value).toString();
-                                return strValue.length > maxLength ? `${strValue.substring(0, maxLength)}...` : strValue;
-                            }
-                        }
+                    min: '{{ $schedule->start_date }}',
+                    max: '{{ $schedule->completion_date }}',
+                    grid: {
+                        borderDash: [5, 5]
                     }
                 },
-            }
+                y: {
+                    beginAtZero: true,
+                    labels: labels,
+                    ticks: {
+                        callback(value, index) {
+                            const maxLength = 35;
+                            const strValue = this.getLabelForValue(value).toString();
+                            return strValue.length > maxLength ? `${strValue.substring(0, maxLength)}...` : strValue;
+                        }
+                    }
+                }
+            },
+        }
 
         new Chart(ctx, {
             type: 'bar',

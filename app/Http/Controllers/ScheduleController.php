@@ -52,12 +52,11 @@ class ScheduleController extends Controller
         $schedule = Schedule::find($id);
         $criterias = FerryCriteria::all();
 
-        $existingScheduleCriterias = DB::table('criteria_schedules')
-            ->select('criteria_id')
-            ->where('schedule_id', $id);
+        $existingScheduleCriterias = CriteriaSchedule::select('criteria_id')
+            ->where('schedule_id', $id)
+            ->get();
 
         $criteriaSchedulesAfter = FerryCriteria::whereIn('id', $existingScheduleCriterias)
-            ->orderBy('id', 'desc')
             ->get();
 
         $criteriaSchedulesBefore = FerryCriteria::whereNotIn('id', $existingScheduleCriterias)
@@ -66,8 +65,7 @@ class ScheduleController extends Controller
         $criteriaSchedules = CriteriaSchedule::where('schedule_id', $id)
             ->get();
 
-        $nearestCriteriaSchedule = DB::table('criteria_schedules')
-            ->join('ferry_criterias', 'criteria_schedules.criteria_id', '=', 'ferry_criterias.id')
+        $nearestCriteriaSchedule = CriteriaSchedule::join('ferry_criterias', 'criteria_schedules.criteria_id', '=', 'ferry_criterias.id')
             ->select('ferry_criterias.criteria', 'criteria_schedules.*')
             ->whereRaw("DATEDIFF(\"$currentDate\", criteria_schedules.start_date) <= ?", [2])
             ->where('schedule_id', $id)
@@ -136,7 +134,6 @@ class ScheduleController extends Controller
         return redirect()->back()->with('success', 'Rincian jadwal berhasil ditambah!');
     }
 
-
     public function storeFinishedCriteriaSchedule($id, $criteria)
     {
         $ongoingCriteriaSchedule = DB::table('ongoing_criteria_schedules')
@@ -169,6 +166,32 @@ class ScheduleController extends Controller
             ->update(['is_finished' => true]);
 
         return redirect()->back()->with('success', 'Kriteria jadwal telah selesai!');
+    }
+
+    public function storeWorkFinishPrediction($id, Request $request)
+    {
+        $criteriaId = $request->input('criteria');
+        $criteriaSchedule = CriteriaSchedule::where('schedule_id', $id)
+            ->where('criteria_id', $criteriaId)
+            ->first();
+
+        $days = $request->input('days');
+
+        $startDate = $criteriaSchedule->start_date;
+        $estimatedCompletionDate = Carbon::parse($criteriaSchedule->completion_date);
+        $completedDate = $estimatedCompletionDate->addWeekdays($days);
+
+        // Store into finished criteria schedules table
+        $result = DB::table('finished_criteria_schedules')->insert([
+            'schedule_id' => $id,
+            'criteria_id' => $criteriaId,
+            'start_date' => $startDate,
+            'estimated_completion_date' => $estimatedCompletionDate,
+            'completed_date' => $completedDate,
+            'completion_delay' => $days,
+        ]);
+
+        return redirect()->back()->with($result ? 'success' : 'error', $result ? 'Berhasil ditambahkan!' : 'Gagal ditambahkan!');
     }
 
     public function showScheduleAnalysisById($id)
